@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #222;
+    }
+    canvas {
+      border: 3px solid white;
+      background: black;
+    }
+    #jumpScare {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #080000;
+      color: #ff1a1a;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #jumpScare.show {
+      visibility: visible;
+      animation: scare-flash 1.4s ease-out both;
+    }
+    .scare-face {
+      width: min(65vw, 360px);
+      aspect-ratio: 1;
+      position: relative;
+      border-radius: 48% 48% 42% 42%;
+      background: radial-gradient(ellipse at center, #5b0909 0%, #210303 65%, #050000 100%);
+      box-shadow: 0 0 80px 30px #a00000;
+      animation: scare-shake 90ms infinite alternate;
+    }
+    .scare-eye {
+      position: absolute;
+      top: 34%;
+      width: 23%;
+      height: 13%;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 24px 12px #ff1010;
+    }
+    .scare-eye.left { left: 18%; transform: rotate(18deg); }
+    .scare-eye.right { right: 18%; transform: rotate(-18deg); }
+    .scare-mouth {
+      position: absolute;
+      left: 34%;
+      top: 57%;
+      width: 32%;
+      height: 25%;
+      border-radius: 50% 50% 45% 45%;
+      background: #050000;
+      box-shadow: 0 0 18px #ff1010;
+    }
+    .scare-message {
+      position: absolute;
+      bottom: 8%;
+      font: bold clamp(24px, 6vw, 48px) Arial, sans-serif;
+      letter-spacing: .12em;
+      text-shadow: 0 0 15px red;
+    }
+    @keyframes scare-flash {
+      0% { opacity: 0; }
+      8%, 72% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes scare-shake {
+      from { transform: translate(-8px, 2px) scale(1.02); }
+      to { transform: translate(8px, -2px) scale(1.08); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #jumpScare.show { animation-duration: 1.4s; }
+      .scare-face { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="myCanvas" width="400" height="400"></canvas>
+  <div id="jumpScare" role="alert" aria-label="Jump scare">
+    <div class="scare-face" aria-hidden="true">
+      <span class="scare-eye left"></span>
+      <span class="scare-eye right"></span>
+      <span class="scare-mouth"></span>
+    </div>
+    <div class="scare-message">BOO!</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+    const jumpScare = document.getElementById("jumpScare");
+
+    console.log("Canvas:", canvas);
+    console.log("Context:", ctx);
+
+    let snakeX = 20;
+    let snakeY = 20;
+    let snakeSize = 10;
+    let foodX = 100;
+    let foodY = 100;
+    let dx = 5;
+    let dy = 0;
+    let moveCount = 0;
+    let scareShown = false;
+
+    // Draw everything
+    function draw() {
+      // Clear canvas
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw food (red)
+      ctx.fillStyle = "red";
+      ctx.fillRect(foodX, foodY, snakeSize, snakeSize);
+
+      // Draw snake (green)
+      ctx.fillStyle = "lime";
+      ctx.fillRect(snakeX, snakeY, snakeSize, snakeSize);
+
+      // Draw text
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText("Snake Game", 10, 30);
+    }
+
+    // Update position
+    function update() {
+      snakeX += dx;
+      snakeY += dy;
+      moveCount++;
+      if (moveCount === 5 && !scareShown) {
+        scareShown = true;
+        jumpScare.classList.add("show");
+      }
+
+      // Bounce off walls
+      if (snakeX < 0 || snakeX > canvas.width - snakeSize) {
+        dx = -dx;
+      }
+      if (snakeY < 0 || snakeY > canvas.height - snakeSize) {
+        dy = -dy;
+      }
+
+      // Check food collision
+      if (snakeX < foodX + snakeSize && snakeX + snakeSize > foodX &&
+          snakeY < foodY + snakeSize && snakeY + snakeSize > foodY) {
+        foodX = Math.random() * (canvas.width - snakeSize);
+        foodY = Math.random() * (canvas.height - snakeSize);
+      }
+    }
+
+    // Keyboard controls
+    document.addEventListener("keydown", (e) => {
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+
+      if (e.key === "ArrowUp") dy = -5;
+      if (e.key === "ArrowDown") dy = 5;
+      if (e.key === "ArrowLeft") dx = -5;
+      if (e.key === "ArrowRight") dx = 5;
+      console.log("Key:", e.key, "dx:", dx, "dy:", dy);
+    });
+
+    // Game loop
+    setInterval(() => {
+      update();
+      draw();
+    }, 50);
+
+    // Initial draw
+    draw();
+  </script>
+</body>
+</html>
